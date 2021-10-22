@@ -472,7 +472,7 @@ def emit_body(fn: NativeFunctionWithDifferentiabilityInfo) -> List[str]:
     is_out_fn = f.func.kind() == SchemaKind.out
     returns_void = len(f.func.returns) == 0
     base_name = get_base_name(f)
-    view_info = get_view_info(fn)
+    view_info = get_view_info(f)
 
     def gen_differentiable_input(
         arg: Union[Argument, SelfArgument, TensorOptionsArguments]
@@ -795,10 +795,10 @@ def emit_body(fn: NativeFunctionWithDifferentiabilityInfo) -> List[str]:
                 elif noref_cpp_type == BaseCType(tensorListT):
                     raise AssertionError(f"Please add use_count checks for {noref_cpp_type}")
 
-        if stmts_before_call and stmts_after_call:
-            call = RUN_ONLY_IN_DEBUG_MODE.substitute(statements=stmts_before_call) + \
-                call + \
-                RUN_ONLY_IN_DEBUG_MODE.substitute(statements=stmts_after_call)
+        # if stmts_before_call and stmts_after_call:
+            # call = RUN_ONLY_IN_DEBUG_MODE.substitute(statements=stmts_before_call) + \
+                # call + \
+                # RUN_ONLY_IN_DEBUG_MODE.substitute(statements=stmts_after_call)
         return call
 
     def emit_call(f: NativeFunction, unpacked_bindings: List[Binding]) -> str:
@@ -810,7 +810,7 @@ def emit_body(fn: NativeFunctionWithDifferentiabilityInfo) -> List[str]:
         unpacked_args = [b.name for b in unpacked_bindings]
         base_type_call = emit_dispatch_call(f, 'self_', unpacked_args)
 
-        if get_view_info(fn) is not None or modifies_arguments(f):
+        if get_view_info(f) is not None or modifies_arguments(f):
             guard = 'at::AutoDispatchBelowAutograd guard;'
         else:
             guard = 'at::AutoDispatchBelowADInplaceOrView guard;'
